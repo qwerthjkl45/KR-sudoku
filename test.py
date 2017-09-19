@@ -102,7 +102,6 @@ def replace(block_ind_row, block_ind_col, grid, grid_value):
         for j in np.arange(3):
             index = (i + block_ind_row)*9+j+block_ind_col
             grid = grid[:index] + grid_value[((6-block_ind_row)+i)*9+j+(6-block_ind_col)] + grid[index + 1:]
-    print(grid)
     return grid
 
 def solve_sudoku_without_center():
@@ -147,18 +146,33 @@ S = And(V, R, C, B)
 file = open("data.txt","r")
 grids_from_data = []
 
-times_w0 = 0.0
-times_w1 = 0.0
-times_w2 = 0.0
+times_w0 = 0.0 #time solve 1-4th sudoku
+times_w1 = 0.0 #time solve 1-4th sudoku + solve 5th sudoku without value from 1 -4th sudoku
+times_w2 = 0.0 #time solve 1-4th sudoku + solve 5th sudoku with value from 1-4th sudoku
+
+times_w0_sum = 0.0
+times_w1_sum = 0.0
+times_w2_sum = 0.0
 
 for lines_index, lines in enumerate(file):
     grids_from_data.append(lines)
-    if((((lines_index) % 4 )==0) & (lines_index != 0)):
+    if((((lines_index-4) % 5 )==0) & (lines_index != 0)):
         times_w0 = solve_sudoku_without_center()
         times_w1 = solve_sudoku_w1()
         times_w2 = solve_sudoku_w2()
-        #clean grid data
+        print('------')
         print(str(times_w0)+' '+str(times_w1)+' '+str(times_w2))
-        
-    
+        grids_from_data[:]=[]
+
+        times_w0_sum += times_w0 
+        times_w1_sum += times_w1
+        times_w2_sum += times_w2 
+
+        times_w0 = 0.0
+        times_w1 = 0.0
+        times_w2 = 0.0
+
+print('---------------result ------------------------')    
+print('way 1: solve each sudoku separately '+str(times_w1_sum/((lines_index+1)/5)))    
+print('way 2: solve the 5th sudoku with value from 1-4th sudoku  '+str(times_w2_sum/((lines_index+1)/5)))
 
