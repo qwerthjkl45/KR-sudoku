@@ -5,22 +5,25 @@ from time import time
 from datetime import timedelta
 from pyeda.inter import *
 import pyeda
+import numpy as np
+import sys
 
 DIGITS = "123456789"
 
 
 line = "="*40
 def log(s, elapsed=None):
-    print()
-    print(str(timedelta(seconds=time()))+ '-'+ s)
+    #print()
+    #print(str(timedelta(seconds=time()))+ '-'+ s)
     print(line)
-    print()
+    #print()
 
 def endlog():
     end = time()
-    print('total time '+str(end-start) )
-    print(line)
-    print("End Program "+str(timedelta(seconds=time())))
+    #print('total time '+str(end-start) )
+    #print(line)
+    #print("End Program "+str(timedelta(seconds=time())))
+    return (end-start)
 
 def now():
     return secondsToStr(time())
@@ -83,19 +86,79 @@ def display(point):
                 chars.append("---+---+---\n")
     print("".join(chars))
 
+def convert_sol_to_array(point):
+    grid_tmp = list()
+    for r in range(1,10):
+        for c in range(1,10):
+            grid_tmp.append(get_val(point, r, c))
+    return ("".join(grid_tmp))
+
 def solve(grid):
     with parse_grid(grid):
         return S.satisfy_one()
 
+def replace(block_ind_row, block_ind_col, grid, grid_value):
+    for i in np.arange(3):
+        for j in np.arange(3):
+            index = (i + block_ind_row)*9+j+block_ind_col
+            grid = grid[:index] + grid_value[((6-block_ind_row)+i)*9+j+(6-block_ind_col)] + grid[index + 1:]
+    print(grid)
+    return grid
+
+def solve_sudoku_without_center():
+    for idx, grid in enumerate(grids_from_data):
+        T = And(S, parse_grid(grid))
+        global times_w0 
+        global start
+        if (idx == len(grids_from_data)-1):
+            return times_w0
+        start = time()
+        T.satisfy_one()
+        times_w0 = endlog()+ times_w0
+        grids_from_data[idx] = convert_sol_to_array(T.satisfy_one())
+    return times_w0
+
+def solve_sudoku_w1():#solve separately
+    T = And(S, parse_grid(grids_from_data[4]))
+    global times_w1 
+    global start
+    start = time()
+    T.satisfy_one()
+    times_w1 = endlog()+ times_w0
+    return times_w1
+
+def solve_sudoku_w2():#solve with value from first-fourth sudoku
+    grids_from_data[4] = replace(0, 0, grids_from_data[4], grids_from_data[0])
+    grids_from_data[4] = replace(0, 6, grids_from_data[4], grids_from_data[1])
+    grids_from_data[4] = replace(6, 0, grids_from_data[4], grids_from_data[2])
+    grids_from_data[4] = replace(6, 6, grids_from_data[4], grids_from_data[3])
+
+    T = And(S, parse_grid(grids_from_data[4]))
+    global times_w2
+    global start
+    start = time()
+    T.satisfy_one()
+    times_w2 = endlog()+ times_w0
+    return times_w2
+
+
 S = And(V, R, C, B)
-print(pyeda.boolalg.expr.expr2dimacscnf(S))
-#grid = "004300209005009001070060043006002087190007400050083000600000105003508690042910300"
-grid =  "073000800004130050085006310500090030008010500010060007051600280040052900002000640"
-print(parse_grid(grid))
-T = And(S, parse_grid(grid))
-start = time()
-atexit.register(endlog)
-log("Start Program")
-T.satisfy_one()
-endlog()
-display(T.satisfy_one())
+
+file = open("data.txt","r")
+grids_from_data = []
+
+times_w0 = 0.0
+times_w1 = 0.0
+times_w2 = 0.0
+
+for lines_index, lines in enumerate(file):
+    grids_from_data.append(lines)
+    if((((lines_index) % 4 )==0) & (lines_index != 0)):
+        times_w0 = solve_sudoku_without_center()
+        times_w1 = solve_sudoku_w1()
+        times_w2 = solve_sudoku_w2()
+        #clean grid data
+        print(str(times_w0)+' '+str(times_w1)+' '+str(times_w2))
+        
+    
+
