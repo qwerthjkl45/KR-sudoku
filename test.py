@@ -140,39 +140,92 @@ def solve_sudoku_w2():#solve with value from first-fourth sudoku
     times_w2 = endlog()+ times_w0
     return times_w2
 
+def solve_sudoku_w3(): #solve center sub-sukudo first, and then fill value in 1-4th sub sukodu
+     T = And(S, parse_grid(grids_from_data_used_in_w3[4]))
+     global times_w3
+     global start
+     start = time()
+     T.satisfy_one()
+     times_w3 = endlog()
+     grids_from_data_used_in_w3[4] = convert_sol_to_array(T.satisfy_one())
+     #replace value to 1-4th sudoku
+     grids_from_data_used_in_w3[0] = replace(6, 6, grids_from_data_used_in_w3[0], grids_from_data_used_in_w3[4])
+     grids_from_data_used_in_w3[1] = replace(6, 0, grids_from_data_used_in_w3[1], grids_from_data_used_in_w3[4])
+     grids_from_data_used_in_w3[2] = replace(0, 6, grids_from_data_used_in_w3[2], grids_from_data_used_in_w3[4])
+     grids_from_data_used_in_w3[3] = replace(0, 0, grids_from_data_used_in_w3[3], grids_from_data_used_in_w3[4])
+
+     for idx, grid in enumerate(grids_from_data_used_in_w3):
+        T = And(S, parse_grid(grid))
+        if (idx == len(grids_from_data)-1):
+            return times_w3
+        start = time()
+        T.satisfy_one()
+        times_w3 = endlog()+ times_w3
+     
+     return times_w3
 
 S = And(V, R, C, B)
 
 file = open("data.txt","r")
 grids_from_data = []
+grids_from_data_used_in_w3 = []
 
 times_w0 = 0.0 #time solve 1-4th sudoku
 times_w1 = 0.0 #time solve 1-4th sudoku + solve 5th sudoku without value from 1 -4th sudoku
 times_w2 = 0.0 #time solve 1-4th sudoku + solve 5th sudoku with value from 1-4th sudoku
+times_w3 = 0.0 #time solve 5th sudoku, and then using new sub-sukodu of 1-4th to solve
 
 times_w0_sum = 0.0
 times_w1_sum = 0.0
 times_w2_sum = 0.0
+times_w3_sum = 0.0
+
+way1_fastest_times = 0
+way2_fastest_times = 0
+way3_fastest_times = 0
 
 for lines_index, lines in enumerate(file):
     grids_from_data.append(lines)
+    grids_from_data_used_in_w3.append(lines)
     if((((lines_index-4) % 5 )==0) & (lines_index != 0)):
+        
         times_w0 = solve_sudoku_without_center()
         times_w1 = solve_sudoku_w1()
         times_w2 = solve_sudoku_w2()
+        times_w3 = solve_sudoku_w3()
+
         print('------')
-        print(str(times_w0)+' '+str(times_w1)+' '+str(times_w2))
+        print('way1: '+str(times_w1)+' way2: '+str(times_w2)+' way3: '+str(times_w3))
         grids_from_data[:]=[]
+        grids_from_data_used_in_w3[:]=[]        
 
         times_w0_sum += times_w0 
         times_w1_sum += times_w1
         times_w2_sum += times_w2 
+        times_w3_sum += times_w3
+
+        if((times_w1>times_w2) & (times_w1>times_w3)):
+            way1_fastest_times = way1_fastest_times +1
+
+        if((times_w2>times_w1) & (times_w2>times_w3)):
+            way2_fastest_times = way2_fastest_times +1
+
+        if((times_w3>times_w1) & (times_w3>times_w1)):
+            way3_fastest_times = way3_fastest_times +1
 
         times_w0 = 0.0
         times_w1 = 0.0
         times_w2 = 0.0
-
+        times_w3 = 0.0
+        
 print('---------------result ------------------------')    
-print('way 1: solve each sudoku separately '+str(times_w1_sum/((lines_index+1)/5)))    
-print('way 2: solve the 5th sudoku with value from 1-4th sudoku  '+str(times_w2_sum/((lines_index+1)/5)))
+print('way 1: '+str(times_w1_sum/((lines_index+1)/5))+' solve each sudoku separately ' )    
+print('way 2: '+str(times_w2_sum/((lines_index+1)/5))+' solve the surrounded sub-sudoku first, and then fill value you got from those sub-sudoku in the center sub-sudoku')
+print('way 3: '+str(times_w3_sum/((lines_index+1)/5))+' solve the center sub-sudoku first, and then fill value you just got from center sub-sudoku in the surrounded sub-sudoku') 
+print('---------------result ------------------------')  
+print('way 1 is the fastest times: '+str(way1_fastest_times))
+print('way 2 is the fastest times: '+str(way2_fastest_times))
+print('way 3 is the fastest times: '+str(way3_fastest_times))
+
+
 
