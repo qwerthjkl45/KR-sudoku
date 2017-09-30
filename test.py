@@ -205,7 +205,7 @@ for lines_index, lines in enumerate(file):
         times_w3 = solve_sudoku_w3()
 
         print('------')
-        print('way1: '+str(times_w1)+' way2: '+str(times_w2)+' way3: '+str(times_w3)+' '+str(lines_index))
+        print('way1: '+str(times_w1)+' way2: '+str(times_w2)+' way3: '+str(times_w3)+' ')
         grids_from_data[:]=[]
         grids_from_data_used_in_w3[:]=[]        
 
@@ -224,8 +224,8 @@ for lines_index, lines in enumerate(file):
                 w2_w1_w3 = w2_w1_w3 +1
             else:
                 w2_w3_w1 = w2_w3_w1 +1
-        elif((times_w3>times_w1) & (times_w3>times_w1)):
-            if(times_w1>=times_w3):
+        elif((times_w3>times_w1) & (times_w3>times_w2)):
+            if(times_w1>=times_w2):
                 w3_w1_w2 = w3_w1_w2 +1
             else:
                 w3_w2_w1 = w3_w2_w1 +1
