@@ -1,11 +1,11 @@
-#https://stackoverflow.com/questions/1557571/how-do-i-get-time-of-a-python-programs-execution/12344609#12344609 Nicojo
-
 import atexit
 from time import time
 from datetime import timedelta
 from pyeda.inter import *
 import pyeda
 import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
 import sys
 
 DIGITS = "123456789"
@@ -167,11 +167,71 @@ def solve_sudoku_w3(): #solve center sub-sukudo first, and then fill value in 1-
      
      return times_w3
 
+def convert_str_to_int_array(string, sudoku_index):
+    l =  list(string)
+    grids_from_data_1 = list(map(int,l[0:len(l)-2]))
+
+    x = [index for index, val in enumerate(grids_from_data_1) if val != 0]
+    
+    x = np.array(x)
+
+    if (sudoku_index == 0):
+        t_x = x%9 + np.random.uniform(0.01, 0.99)
+        t_y = 27- (x//9) - np.random.uniform(0, 1)
+
+    if (sudoku_index == 1):
+        t_x = x%9 + 18 + np.random.uniform(0.01, 0.99)
+        t_y = 27- (x//9) - np.random.uniform(0, 1)
+
+    if (sudoku_index == 2):
+        t_x = x%9 + np.random.uniform(0.01, 0.99)
+        t_y = 9- (x//9) - np.random.uniform(0, 1)
+
+    if (sudoku_index == 3):
+        t_x = x%9 + 18 + np.random.uniform(0.01, 0.99)
+        t_y = 9- (x//9) - np.random.uniform(0, 1)
+
+    if (sudoku_index == 4):
+        t_x = x%9 + 9 + np.random.uniform(0.01, 0.99)
+        t_y = 18- (x//9) - np.random.uniform(0, 1)
+
+    return t_x, t_y, len(grids_from_data_1) - len(x)
+
+def draw_pattern(way):
+    
+    if(way == 1): 
+        plt.subplot(3,1,1)
+    elif(way == 2):
+        plt.subplot(3,1,2)
+    else :
+        plt.subplot(3,1,3)
+
+    t_x, t_y, num1 = convert_str_to_int_array(grids_from_data_plt[0], 0)
+    plt.plot(t_x, t_y, 'g^', markersize = 5)
+
+    t_x, t_y, num2 = convert_str_to_int_array(grids_from_data_plt[1], 1)
+    plt.plot(t_x, t_y, 'r^', markersize = 5)
+
+    t_x, t_y, num3= convert_str_to_int_array(grids_from_data_plt[2], 2)
+    plt.plot(t_x, t_y, 'r^', markersize = 5)
+
+    t_x, t_y, num4 = convert_str_to_int_array(grids_from_data_plt[3], 3)
+    plt.plot(t_x, t_y, 'r^', markersize = 5)
+
+    t_x, t_y, num5 = convert_str_to_int_array(grids_from_data_plt[4], 4)
+    plt.plot(t_x, t_y, 'r^', markersize = 5)
+
+    plt.xticks((np.arange(27, -1, -1)))
+    plt.yticks((np.arange(27, -1, -1)))
+    return (num1+ num2 +num3 +num4 +num5)
+    
+
 S = And(V, R, C, B)
 
 file = open("data.txt","r")
 grids_from_data = []
 grids_from_data_used_in_w3 = []
+grids_from_data_plt = []
 
 times_w0 = 0.0 #time solve 1-4th sudoku
 times_w1 = 0.0 #time solve 1-4th sudoku + solve 5th sudoku without value from 1 -4th sudoku
@@ -194,18 +254,25 @@ w2_w3_w1 = 0
 w3_w1_w2 = 0
 w3_w2_w1 = 0
 
+num_0_in_w1 = []
+num_0_in_w2 = []
+num_0_in_w3 = []
+
 for lines_index, lines in enumerate(file):
+    grids_from_data_plt.append(lines)
     grids_from_data.append(lines)
     grids_from_data_used_in_w3.append(lines)
+
     if((((lines_index-4) % 5 )==0) & (lines_index != 0)):
+        
         
         times_w0 = solve_sudoku_without_center()
         times_w1 = solve_sudoku_w1()
         times_w2 = solve_sudoku_w2()
         times_w3 = solve_sudoku_w3()
 
-        print('------')
-        print('way1: '+str(times_w1)+' way2: '+str(times_w2)+' way3: '+str(times_w3)+' ')
+        #print('------')
+        #print('way1: '+str(times_w1)+' way2: '+str(times_w2)+' way3: '+str(times_w3)+' ')
         grids_from_data[:]=[]
         grids_from_data_used_in_w3[:]=[]        
 
@@ -217,24 +284,37 @@ for lines_index, lines in enumerate(file):
         if((times_w1>=times_w2) & (times_w1>=times_w3)):
             if(times_w2>=times_w3):
                 w1_w2_w3 = w1_w2_w3 +1
+                num_0_in_w3.append(draw_pattern(3))
             else:
                 w1_w3_w2 = w1_w3_w2 +1
+                num_0_in_w2.append(draw_pattern(2))
         elif((times_w2>times_w1) & (times_w2>=times_w3)):
             if(times_w1>=times_w3):
                 w2_w1_w3 = w2_w1_w3 +1
+                num_0_in_w3.append(draw_pattern(3))
             else:
                 w2_w3_w1 = w2_w3_w1 +1
+                num_0_in_w1.append(draw_pattern(1))
         elif((times_w3>times_w1) & (times_w3>times_w2)):
             if(times_w1>=times_w2):
                 w3_w1_w2 = w3_w1_w2 +1
+                num_0_in_w2.append(draw_pattern(2))
             else:
                 w3_w2_w1 = w3_w2_w1 +1
-
+                num_0_in_w1.append(draw_pattern(1))
+        
+        grids_from_data_plt[:]=[]
         times_w0 = 0.0
         times_w1 = 0.0
         times_w2 = 0.0
         times_w3 = 0.0
-        
+
+plt.grid(True)
+plt.show()
+#plt.axis([0,45,0,45])
+
+
+
 print('---------------result ------------------------')    
 print('way 1: '+str(times_w1_sum/((lines_index+1)/5))+' solve each sudoku separately ' )    
 print('way 2: '+str(times_w2_sum/((lines_index+1)/5))+' solve the surrounded sub-sudoku first, and then fill value you got from those sub-sudoku in the center sub-sudoku')
@@ -243,6 +323,22 @@ print('---------------result ------------------------')
 print('way 1 is the fastest times: (w3>w2>w1) (w2>w3>w1)  '+str(w3_w2_w1)+'+ '+str(w2_w3_w1)+'= '+ str(w3_w2_w1+w2_w3_w1))
 print('way 2 is the fastest times: (w1_w3_w2) (w3_w1_w2)  '+str(w1_w3_w2)+'+ '+str(w3_w1_w2)+'= '+ str(w1_w3_w2+w3_w1_w2))
 print('way 3 is the fastest times: (w1>w2>w3) (w2>w1>w3)  '+str(w1_w2_w3)+'+ '+str(w2_w1_w3)+'= '+ str(w1_w2_w3+w2_w1_w3))
+
+
+
+fig = plt.figure()
+ax1 = fig.add_subplot(311)
+ax2 = fig.add_subplot(312)
+ax3 = fig.add_subplot(313)
+
+ax1.hist(num_0_in_w1,normed=True)
+ax2.hist(num_0_in_w2,normed=True)
+ax3.hist(num_0_in_w3,normed=True)
+
+
+fig.text(0.5, 0.04, 'numbers of empty grid in one round', ha='center', va='center')
+fig.text(0.06, 0.5, 'normalized times of numbers of empty grid in one round', ha='center', va='center', rotation='vertical')
+plt.show()
 
 
 
